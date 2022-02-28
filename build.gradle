@@ -53,6 +53,8 @@ dependencies {
     //implementation 'org.springframework.kafka:spring-kafka'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'io.netty:netty-resolver-dns-native-macos:4.1.72.Final:osx-aarch_64'
+    implementation 'commons-codec:commons-codec:1.15'
+    implementation 'com.google.guava:guava:31.0.1-jre'
 
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
