@@ -87,6 +87,11 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
     }
 
     @Override
+    public boolean empty() {
+        return cacheObjects.size() == 0;
+    }
+
+    @Override
     public long sizeOfCompressedData() {
         return cacheObjects.values().stream().mapToLong(cacheObjects -> cacheObjects.getSize()).sum();
     }

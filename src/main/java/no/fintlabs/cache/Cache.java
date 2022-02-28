@@ -12,6 +12,8 @@ public interface Cache<T extends Serializable> {
 
     int size();
 
+    boolean empty();
+
     long sizeOfCompressedData();
 
     Stream<T> stream();

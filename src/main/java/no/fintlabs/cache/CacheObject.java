@@ -32,7 +32,6 @@ public final class CacheObject<T extends Serializable> implements Serializable {
         this(obj, new int[0]);
     }*/
 
-    // TODO: 26/02/2022 Do we need hashCodes and checksum? 
     public CacheObject(T object, int[] hashCodes) {
         lastUpdated = System.currentTimeMillis();
         bytes = PACKER.pack(object);
