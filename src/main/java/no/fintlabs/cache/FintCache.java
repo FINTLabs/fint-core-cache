@@ -47,24 +47,41 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
         lastUpdated = System.currentTimeMillis();
     }
 
-    private boolean hasElementWithSameChecksum(String key, CacheObject<T> object){
+    private boolean hasElementWithSameChecksum(String key, CacheObject<T> object) {
         if (!cacheObjects.containsKey(key)) return false;
         return cacheObjects.get(key).getChecksum().equals(object.getChecksum());
     }
 
-    @Override
-    public Stream<T> stream() {
-        return cacheObjects.values().stream().map(CacheObject::getObject);
+    private Stream<CacheObject<T>> getUncompressedStream() {
+        return cacheObjects.values().stream();
+    }
+
+    private Stream<CacheObject<T>> getUncompressedStream(long sinceTimeStamp) {
+        return Multimaps
+                .filterKeys(lastUpdatedIndex, key -> key > sinceTimeStamp)
+                .values()
+                .stream()
+                .map(s -> cacheObjects.get(s));
     }
 
     @Override
-    public Stream<T> streamSince(long timestamp) {
-        return Multimaps
-                .filterKeys(lastUpdatedIndex, key -> key > timestamp)
-                .values()
-                .stream()
-                .map(s -> cacheObjects.get(s))
-                .map(CacheObject::getObject);
+    public Stream<T> stream() {
+        return getUncompressedStream().map(CacheObject::getObject);
+    }
+
+    @Override
+    public Stream<T> streamSince(long sinceTimeStamp) {
+        return getUncompressedStream(sinceTimeStamp).map(CacheObject::getObject);
+    }
+
+    @Override
+    public Stream<T> streamSlice(int skip, int limit) {
+        return getUncompressedStream().skip((long) skip).limit((long) limit).map(CacheObject::getObject);
+    }
+
+    @Override
+    public Stream<T> streamSliceSince(long sinceTimeStamp, int skip, int limit) {
+        return getUncompressedStream(sinceTimeStamp).skip((long) skip).limit((long) limit).map(CacheObject::getObject);
     }
 
     @Override

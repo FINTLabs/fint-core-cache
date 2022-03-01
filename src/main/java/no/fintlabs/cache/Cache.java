@@ -20,6 +20,10 @@ public interface Cache<T extends Serializable> {
 
     Stream<T> streamSince(long timestamp);
 
+    Stream<T> streamSlice(int skip, int limit);
+
+    Stream<T> streamSliceSince(long sinceTimeStamp, int skip, int limit);
+
     Stream<T> streamByHashCode(int hashCode);
 }
 
