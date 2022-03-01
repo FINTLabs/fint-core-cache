@@ -24,10 +24,6 @@ public final class CacheObject<T extends Serializable> implements Serializable {
     private final byte[] bytes;
     private final int[] hashCodes;
 
-    public T getObject() {
-        return (T) PACKER.unpack(bytes);
-    }
-
    /* public CacheObject(T obj) {
         this(obj, new int[0]);
     }*/
@@ -37,6 +33,10 @@ public final class CacheObject<T extends Serializable> implements Serializable {
         bytes = PACKER.pack(object);
         checksum = DigestUtils.sha1(bytes);
         this.hashCodes = hashCodes;
+    }
+
+    public T decompressObject() {
+        return (T) PACKER.unpack(bytes);
     }
 
     public int getSize() {

@@ -66,22 +66,22 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
 
     @Override
     public Stream<T> stream() {
-        return getUncompressedStream().map(CacheObject::getObject);
+        return getUncompressedStream().map(CacheObject::decompressObject);
     }
 
     @Override
     public Stream<T> streamSince(long sinceTimeStamp) {
-        return getUncompressedStream(sinceTimeStamp).map(CacheObject::getObject);
+        return getUncompressedStream(sinceTimeStamp).map(CacheObject::decompressObject);
     }
 
     @Override
     public Stream<T> streamSlice(int skip, int limit) {
-        return getUncompressedStream().skip((long) skip).limit((long) limit).map(CacheObject::getObject);
+        return getUncompressedStream().skip((long) skip).limit((long) limit).map(CacheObject::decompressObject);
     }
 
     @Override
     public Stream<T> streamSliceSince(long sinceTimeStamp, int skip, int limit) {
-        return getUncompressedStream(sinceTimeStamp).skip((long) skip).limit((long) limit).map(CacheObject::getObject);
+        return getUncompressedStream(sinceTimeStamp).skip((long) skip).limit((long) limit).map(CacheObject::decompressObject);
     }
 
     @Override
@@ -90,7 +90,7 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
                 .get(hashCode)
                 .stream()
                 .map(s -> cacheObjects.get(s))
-                .map(CacheObject::getObject);
+                .map(CacheObject::decompressObject);
     }
 
     @Override
