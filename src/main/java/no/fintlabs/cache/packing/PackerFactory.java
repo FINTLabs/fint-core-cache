@@ -10,10 +10,11 @@ public final class PackerFactory {
 
     public static Packer create(String type) {
         switch (type.toUpperCase()) {
-            case "DEFLATE":
-                return new CompressingPacker(DeflaterOutputStream::new, InflaterInputStream::new);
-            default:
+            case "UNCOMPRESSED":
                 return new SerializationPacker();
+            case "DEFLATE":
+            default:
+                return new CompressingPacker(DeflaterOutputStream::new, InflaterInputStream::new);
         }
 
     }

@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'no.fintlabs'
-version = '0.0.1-SNAPSHOT'
+version = '0-SNAPSHOT'
 sourceCompatibility = '17'
 
 configurations {
@@ -74,3 +74,5 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+apply from: 'https://raw.githubusercontent.com/FINTLabs/fint-buildscripts/master/reposilite.ga.gradle'
