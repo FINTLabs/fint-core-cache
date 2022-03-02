@@ -1,6 +1,8 @@
 package no.fintlabs.cache;
 
 import java.io.Serializable;
+import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public interface Cache<T extends Serializable> {
@@ -25,5 +27,7 @@ public interface Cache<T extends Serializable> {
     Stream<T> streamSliceSince(long sinceTimeStamp, int skip, int limit);
 
     Stream<T> streamByHashCode(int hashCode);
+
+    Optional<T> getLastUpdatedByFilter(int hashCode, Predicate<T> predicate);
 }
 

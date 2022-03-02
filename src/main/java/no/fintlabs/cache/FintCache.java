@@ -7,9 +7,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -90,6 +89,17 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
                 .get(hashCode)
                 .stream()
                 .map(s -> cacheObjects.get(s))
+                .map(CacheObject::decompressObject);
+    }
+
+    @Override
+    public Optional<T> getLastUpdatedByFilter(int hashCode, Predicate<T> predicate) {
+        return hashCodesIndex
+                .get(hashCode)
+                .stream()
+                .map(cacheObjects::get)
+                .filter(o -> predicate.test(o.decompressObject()))
+                .max(Comparator.comparingLong(CacheObject::getLastUpdated))
                 .map(CacheObject::decompressObject);
     }
 

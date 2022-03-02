@@ -16,7 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set version
-        run: echo "RELEASE_VERSION=$(echo ${GITHUB_REF#refs/*/} | sed "s/^v//")" >> $GITHUB_ENV
+        run: | 
+          echo "RELEASE_VERSION=$(echo ${GITHUB_REF#refs/*/} | sed "s/^v//")" >> $GITHUB_ENV
+          echo "RELEASE_VERSION=$(echo ${GITHUB_REF#refs/*/} | sed "s/^v//")"
+          echo "$GITHUB_ENV"
+          echo "$RELEASE_VERSION"
       - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
