@@ -1,22 +1,31 @@
 package no.fintlabs
 
+import no.fintlabs.cache.CacheObjectFactory
 import no.fintlabs.cache.FintCache
+import no.fintlabs.cache.packing.PackingTypes
+import spock.lang.Ignore
+import spock.lang.Shared
 import spock.lang.Specification
+
+import java.util.stream.Collectors
 
 class FintCacheSpec extends Specification {
 
-    def "Construct new cache"() {
-        when:
-        def cache = new FintCache<String>()
+    def cache
 
-        then:
+    void setup() {
+        def factory = new CacheObjectFactory(PackingTypes.DEFLATE)
+        cache = new FintCache<TestObject>(factory)
+    }
+
+    def "Construct new cache"() {
+        expect:
         cache.size() == 0
         cache.empty()
     }
 
     def "Add element to cache"() {
         given:
-        def cache = new FintCache<TestObject>()
         def testObject = new TestObject("Frodo Lommelun");
 
         when:
@@ -28,9 +37,6 @@ class FintCacheSpec extends Specification {
     }
 
     def "Add multiple elements to cache"() {
-        given:
-        def cache = new FintCache<TestObject>()
-
         when:
         cache.put("key1", new TestObject("Samvis Gamgod"), new int[]{})
         cache.put("key2", new TestObject("Gandalv"), new int[]{})
@@ -42,7 +48,6 @@ class FintCacheSpec extends Specification {
 
     def "Update an element"() {
         given:
-        def cache = new FintCache<TestObject>()
         def ringBearer1 = new TestObject("Bilbo Lommelun");
         def ringBearer2 = new TestObject("Frodo Lommelun");
 
@@ -57,7 +62,6 @@ class FintCacheSpec extends Specification {
 
     def "Don't update if the element is unchanged"() {
         given:
-        def cache = new FintCache<TestObject>()
         def testObject = new TestObject("Frodo Lommelun");
 
         when:
@@ -74,7 +78,6 @@ class FintCacheSpec extends Specification {
 
     def "Filter element by hashCode"() {
         given:
-        def cache = new FintCache<TestObject>()
         def hashCode = 123456789
 
         when:
@@ -88,9 +91,6 @@ class FintCacheSpec extends Specification {
     }
 
     def "Filter element by since"() {
-        given:
-        def cache = new FintCache<TestObject>()
-
         when:
         cache.put("key1", new TestObject("Samvis Gamgod"), new int[]{})
         cache.put("key2", new TestObject("Gandalv"), new int[]{})
@@ -104,4 +104,44 @@ class FintCacheSpec extends Specification {
         then:
         cache.streamSince(lastUpdate).count() == 2
     }
+
+    @Ignore("Known bug because of missing natural order")
+    def "Filter element by slice"(){
+        when:
+        cache.put("key1", new TestObject("Samvis Gamgod"), new int[]{})
+        cache.put("key2", new TestObject("Gandalv"), new int[]{})
+        cache.put("key3", new TestObject("Tom Bombadil"), new int[]{})
+        cache.put("key4", new TestObject("Arwen"), new int[]{})
+        cache.put("key5", new TestObject("Gollum"), new int[]{})
+
+        then:
+        def slice = cache
+                .streamSlice(2, 1)
+                .collect(Collectors.toList());
+        slice.size() == 1
+        slice.get(0).name.equals("Tom Bombadil")
+    }
+
+//    def "Filter element by since/slice"(){
+//        given:
+//        def cache = new FintCache<TestObject>()
+//
+//        when:
+//        cache.put("key1", new TestObject("Samvis Gamgod"), new int[]{})
+//        cache.put("key2", new TestObject("Gandalv"), new int[]{})
+//        cache.put("key3", new TestObject("Tom Bombadil"), new int[]{})
+//        cache.put("key4", new TestObject("Arwen"), new int[]{})
+//        cache.put("key5", new TestObject("Gollum"), new int[]{})
+//
+//        then:
+//        def slice = cache
+//                .streamSlice(2, 1)
+//                .collect(Collectors.toList());
+//        slice.count() == 1
+//        slice.get(0).name.equals("Tom Bombadil")
+//    }
+
+//    def "Filter element by predicate"() {
+//
+//    }
 }

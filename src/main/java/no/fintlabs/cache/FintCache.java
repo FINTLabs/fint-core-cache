@@ -19,7 +19,10 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
     private ListMultimap<Long, String> lastUpdatedIndex;
     private long lastUpdated;
 
-    public FintCache() {
+    private final CacheObjectFactory<T> cacheObjectFactory;
+
+    public FintCache(CacheObjectFactory<T> cacheObjectFactory) {
+        this.cacheObjectFactory = cacheObjectFactory;
         init();
     }
 
@@ -37,7 +40,7 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
 
     @Override
     public void put(String key, T object, int[] hashCodes) {
-        CacheObject<T> newCacheObject = new CacheObject<>(object, hashCodes);
+        CacheObject<T> newCacheObject = cacheObjectFactory.createCacheObject(object, hashCodes);
         if (hasElementWithSameChecksum(key, newCacheObject)) return;
 
         cacheObjects.put(key, newCacheObject);
@@ -75,12 +78,12 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
 
     @Override
     public Stream<T> streamSlice(int skip, int limit) {
-        return getUncompressedStream().skip((long) skip).limit((long) limit).map(CacheObject::decompressObject);
+        return getUncompressedStream().skip(skip).limit(limit).map(CacheObject::decompressObject);
     }
 
     @Override
     public Stream<T> streamSliceSince(long sinceTimeStamp, int skip, int limit) {
-        return getUncompressedStream(sinceTimeStamp).skip((long) skip).limit((long) limit).map(CacheObject::decompressObject);
+        return getUncompressedStream(sinceTimeStamp).skip(skip).limit(limit).map(CacheObject::decompressObject);
     }
 
     @Override
@@ -120,7 +123,7 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
 
     @Override
     public long sizeOfCompressedData() {
-        return cacheObjects.values().stream().mapToLong(cacheObjects -> cacheObjects.getSize()).sum();
+        return cacheObjects.values().stream().mapToLong(CacheObject::getSize).sum();
     }
 }
 
