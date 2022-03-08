@@ -32,7 +32,7 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
     }
 
     private void init() {
-        cacheObjects = new HashMap<>();
+        cacheObjects = new LinkedHashMap<>();
         hashCodesIndex = MultimapBuilder.treeKeys().arrayListValues().build();
         lastUpdatedIndex = MultimapBuilder.treeKeys().arrayListValues().build();
         lastUpdated = 0;

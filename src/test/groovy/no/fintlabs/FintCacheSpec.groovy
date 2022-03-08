@@ -76,6 +76,23 @@ class FintCacheSpec extends Specification {
         firstChange == lastChange
     }
 
+    def "Preserve insertion-order"(){
+        when:
+        cache.put("key1", new TestObject("Samvis Gamgod"), new int[]{})
+        cache.put("key2", new TestObject("Gandalv"), new int[]{})
+        cache.put("key3", new TestObject("Tom Bombadil"), new int[]{})
+        cache.put("key4", new TestObject("Arwen"), new int[]{})
+        cache.put("key5", new TestObject("Gollum"), new int[]{})
+
+        then:
+        def values = cache.stream().collect(Collectors.toList());
+        values.get(0).name == "Samvis Gamgod";
+        values.get(1).name == "Gandalv";
+        values.get(2).name == "Tom Bombadil";
+        values.get(3).name == "Arwen";
+        values.get(4).name == "Gollum";
+    }
+
     def "Filter element by hashCode"() {
         given:
         def hashCode = 123456789
@@ -105,7 +122,6 @@ class FintCacheSpec extends Specification {
         cache.streamSince(lastUpdate).count() == 2
     }
 
-    @Ignore("Known bug because of missing natural order")
     def "Filter element by slice"(){
         when:
         cache.put("key1", new TestObject("Samvis Gamgod"), new int[]{})
