@@ -1,5 +1,8 @@
 package no.fintlabs.cache;
 
+import no.fintlabs.cache.cacheObjects.CacheObject;
+import no.fintlabs.cache.cacheObjects.PojoCacheObject;
+import no.fintlabs.cache.cacheObjects.SerializedCacheObject;
 import no.fintlabs.cache.packing.CompressingPacker;
 import no.fintlabs.cache.packing.Packer;
 import no.fintlabs.cache.packing.PackingTypes;
@@ -29,7 +32,9 @@ public class CacheObjectFactory<T extends Serializable> {
     public CacheObject<T> createCacheObject(T value, int[] hashCodes) {
         switch (packingType) {
             case DEFLATE, SERIALIZATION:
-                return new CacheObject<>(packer, value, hashCodes);
+                return new SerializedCacheObject<>(packer, value, hashCodes);
+            case POJO:
+                return new PojoCacheObject<>(value, hashCodes);
             default:
                 throw new UnsupportedOperationException("Can't create cacheObject for type " + packingType);
         }

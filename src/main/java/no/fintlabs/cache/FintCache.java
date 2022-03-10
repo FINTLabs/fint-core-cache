@@ -5,6 +5,7 @@ import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multimaps;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import no.fintlabs.cache.cacheObjects.CacheObject;
 
 import java.io.Serializable;
 import java.util.*;
@@ -51,14 +52,14 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
 
     private boolean hasElementWithSameChecksum(String key, CacheObject<T> object) {
         if (!cacheObjects.containsKey(key)) return false;
-        return cacheObjects.get(key).getChecksum().equals(object.getChecksum());
+        return cacheObjects.get(key).equals(object);
     }
 
-    private Stream<CacheObject<T>> getUncompressedStream() {
+    private Stream<CacheObject<T>> getCacheObjectStream() {
         return cacheObjects.values().stream();
     }
 
-    private Stream<CacheObject<T>> getUncompressedStream(long sinceTimeStamp) {
+    private Stream<CacheObject<T>> getCacheObjectStream(long sinceTimeStamp) {
         return Multimaps
                 .filterKeys(lastUpdatedIndex, key -> key > sinceTimeStamp)
                 .values()
@@ -68,22 +69,22 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
 
     @Override
     public Stream<T> stream() {
-        return getUncompressedStream().map(CacheObject::decompressObject);
+        return getCacheObjectStream().map(CacheObject::unboxObject);
     }
 
     @Override
     public Stream<T> streamSince(long sinceTimeStamp) {
-        return getUncompressedStream(sinceTimeStamp).map(CacheObject::decompressObject);
+        return getCacheObjectStream(sinceTimeStamp).map(CacheObject::unboxObject);
     }
 
     @Override
     public Stream<T> streamSlice(int skip, int limit) {
-        return getUncompressedStream().skip(skip).limit(limit).map(CacheObject::decompressObject);
+        return getCacheObjectStream().skip(skip).limit(limit).map(CacheObject::unboxObject);
     }
 
     @Override
     public Stream<T> streamSliceSince(long sinceTimeStamp, int skip, int limit) {
-        return getUncompressedStream(sinceTimeStamp).skip(skip).limit(limit).map(CacheObject::decompressObject);
+        return getCacheObjectStream(sinceTimeStamp).skip(skip).limit(limit).map(CacheObject::unboxObject);
     }
 
     @Override
@@ -92,7 +93,7 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
                 .get(hashCode)
                 .stream()
                 .map(s -> cacheObjects.get(s))
-                .map(CacheObject::decompressObject);
+                .map(CacheObject::unboxObject);
     }
 
     @Override
@@ -101,9 +102,9 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
                 .get(hashCode)
                 .stream()
                 .map(cacheObjects::get)
-                .filter(o -> predicate.test(o.decompressObject()))
+                .filter(o -> predicate.test(o.unboxObject()))
                 .max(Comparator.comparingLong(CacheObject::getLastUpdated))
-                .map(CacheObject::decompressObject);
+                .map(CacheObject::unboxObject);
     }
 
     @Override

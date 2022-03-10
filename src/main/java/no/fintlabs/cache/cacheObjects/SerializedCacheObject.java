@@ -1,6 +1,5 @@
-package no.fintlabs.cache;
+package no.fintlabs.cache.cacheObjects;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import no.fintlabs.cache.packing.Packer;
@@ -11,29 +10,22 @@ import java.io.Serializable;
 
 @SuppressWarnings("unchecked")
 @Getter
-@EqualsAndHashCode(of = "checksum")
 @ToString
-public final class CacheObject<T extends Serializable> implements Serializable {
+public class SerializedCacheObject<T extends Serializable> extends CacheObject<T> {
 
     private final Packer packer;
     private final byte[] checksum;
-    private final long lastUpdated;
     private final byte[] bytes;
-    private final int[] hashCodes;
 
-   /* public CacheObject(T obj) {
-        this(obj, new int[0]);
-    }*/
+    public SerializedCacheObject(Packer packer, T object, int[] hashCodes) {
+        super(hashCodes);
 
-    public CacheObject(Packer packer, T object, int[] hashCodes) {
         this.packer = packer;
-        lastUpdated = System.currentTimeMillis();
         bytes = packer.pack(object);
         checksum = DigestUtils.sha1(bytes);
-        this.hashCodes = hashCodes;
     }
 
-    public T decompressObject() {
+    public T unboxObject() {
         return (T) packer.unpack(bytes);
     }
 
@@ -43,5 +35,12 @@ public final class CacheObject<T extends Serializable> implements Serializable {
 
     public String getChecksum() {
         return Hex.encodeHexString(checksum);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+        if (!(o instanceof SerializedCacheObject other)) return false;
+        return this.getChecksum().equals(other.getChecksum());
     }
 }
