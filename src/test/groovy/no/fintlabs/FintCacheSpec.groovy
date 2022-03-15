@@ -112,13 +112,16 @@ class FintCacheSpec extends Specification {
         cache.put("key2", new TestObject("Gandalv"), new int[]{})
         cache.put("key3", new TestObject("Tom Bombadil"), new int[]{})
         def lastUpdate = cache.getLastUpdated()
-        // todo can fail if we dont wait 1ms. Fix?
-        sleep(1)
         cache.put("key4", new TestObject("Arwen"), new int[]{})
         cache.put("key5", new TestObject("Gollum"), new int[]{})
 
         then:
         cache.streamSince(lastUpdate).count() == 2
+
+        // before lock on getLastUpdated & put, we expreienced this test to failed every 3-5 execution
+        // probably because getLastUpdated and put was executed in the same milli secound
+        where:
+        i << (1..10)
     }
 
     def "Filter element by slice"() {

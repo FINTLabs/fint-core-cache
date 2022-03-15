@@ -9,6 +9,7 @@ import no.fintlabs.cache.cacheObjects.CacheObject;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -19,11 +20,13 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
     private ListMultimap<Integer, String> hashCodesIndex;
     private ListMultimap<Long, String> lastUpdatedIndex;
     private long lastUpdated;
+    private final ReentrantLock lock;
 
     private final CacheObjectFactory<T> cacheObjectFactory;
 
     public FintCache(CacheObjectFactory<T> cacheObjectFactory) {
         this.cacheObjectFactory = cacheObjectFactory;
+        lock = new ReentrantLock();
         init();
     }
 
@@ -47,6 +50,10 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
         cacheObjects.put(key, newCacheObject);
         Arrays.stream(hashCodes).forEach(hashCode -> hashCodesIndex.put(hashCode, key));
         lastUpdatedIndex.put(newCacheObject.getLastUpdated(), key);
+
+        while(lock.isLocked()){
+            log.debug("Lock is on");
+        }
         lastUpdated = System.currentTimeMillis();
     }
 
@@ -109,7 +116,19 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
 
     @Override
     public long getLastUpdated() {
-        return lastUpdated;
+        lock.lock();
+        long currentLastUpdated = lastUpdated;
+        sleep();
+        lock.unlock();
+        return currentLastUpdated;
+    }
+
+    private void sleep() {
+        try {
+            Thread.sleep(1);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
