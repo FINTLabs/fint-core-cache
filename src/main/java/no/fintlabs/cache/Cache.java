@@ -1,10 +1,13 @@
 package no.fintlabs.cache;
 
+import org.springframework.stereotype.Repository;
+
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+@Repository
 public interface Cache<T extends Serializable> {
     void put(String key, T object, int[] hashCodes);
 
