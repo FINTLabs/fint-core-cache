@@ -188,4 +188,55 @@ class FintCacheSpec extends Specification {
         result.get().name.equals("Gandalv")
         result.get().id == 22
     }
+
+
+    def "Check retention not expired"() {
+        when:
+        cache.setRetentionPeriodInMs(5000)
+        cache.put("key", new TestObject("Frodo Lommelun"), new int[]{})
+        cache.evictOldCacheObjects()
+
+        then:
+        cache.size() == 1
+    }
+
+    def "Check retention when expired"() {
+        when:
+        cache.setRetentionPeriodInMs(5)
+        cache.put("frodo-key", new TestObject("Frodo Lommelun"), new int[]{})
+        sleep(10)
+        cache.evictOldCacheObjects()
+
+        then:
+        cache.size() == 0
+    }
+
+    def "Check retention for multiple objects"() {
+        when:
+        cache.setRetentionPeriodInMs(100)
+        cache.put("key1", new TestObject("Samvis Gamgod"), new int[]{})
+        cache.put("key2", new TestObject("Gandalv", 21), new int[]{})
+        cache.put("key3", new TestObject("Tom Bombadil"), new int[]{})
+        cache.put("key4", new TestObject("Arwen"), new int[]{})
+        sleep(101)
+        cache.put("key5", new TestObject("Gollum"), new int[]{})
+        cache.put("key6", new TestObject("Gandalv", 22), new int[]{})
+
+        cache.evictOldCacheObjects()
+
+        then:
+        cache.size() == 2
+    }
+
+    def "Check retention when re-delivered"() {
+        when:
+        cache.setRetentionPeriodInMs(50)
+        cache.put("frodo-key", new TestObject("Frodo Lommelun"), new int[]{})
+        sleep(51)
+        cache.put("frodo-key", new TestObject("Frodo Lommelun"), new int[]{})
+        cache.evictOldCacheObjects()
+
+        then:
+        cache.size() == 1
+    }
 }

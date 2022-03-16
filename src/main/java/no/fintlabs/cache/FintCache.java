@@ -4,13 +4,16 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multimaps;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.cache.cacheObjects.CacheObject;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -23,6 +26,9 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
     private final ReentrantLock lock;
 
     private final CacheObjectFactory<T> cacheObjectFactory;
+
+    @Setter
+    private long retentionPeriodInMs;
 
     public FintCache(CacheObjectFactory<T> cacheObjectFactory) {
         this.cacheObjectFactory = cacheObjectFactory;
@@ -45,19 +51,22 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
     @Override
     public void put(String key, T object, int[] hashCodes) {
         CacheObject<T> newCacheObject = cacheObjectFactory.createCacheObject(object, hashCodes);
-        if (hasElementWithSameChecksum(key, newCacheObject)) return;
+        if (hasEqualElement(key, newCacheObject)) {
+            cacheObjects.get(key).refreshLastDelivered();
+            return;
+        }
 
         cacheObjects.put(key, newCacheObject);
         Arrays.stream(hashCodes).forEach(hashCode -> hashCodesIndex.put(hashCode, key));
         lastUpdatedIndex.put(newCacheObject.getLastUpdated(), key);
 
-        while(lock.isLocked()){
+        while (lock.isLocked()) {
             log.debug("Lock is on");
         }
         lastUpdated = System.currentTimeMillis();
     }
 
-    private boolean hasElementWithSameChecksum(String key, CacheObject<T> object) {
+    private boolean hasEqualElement(String key, CacheObject<T> object) {
         if (!cacheObjects.containsKey(key)) return false;
         return cacheObjects.get(key).equals(object);
     }
@@ -144,6 +153,27 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
     @Override
     public long sizeOfCompressedData() {
         return cacheObjects.values().stream().mapToLong(CacheObject::getSize).sum();
+    }
+
+    @Scheduled(initialDelay = 900000L, fixedDelay = 900000L)
+    public void evictOldCacheObjects() {
+        log.debug("Running janitor service");
+        if (retentionPeriodInMs <= 0) return;
+        long currentTime = System.currentTimeMillis();
+
+        List<Map.Entry<String, CacheObject<T>>> itemsToRemove = cacheObjects
+                .entrySet()
+                .stream()
+                .filter(entrySet -> currentTime - entrySet.getValue().getLastDelivered() > retentionPeriodInMs)
+                .collect(Collectors.toList());
+
+        itemsToRemove
+                .stream()
+                .forEach(entrySet -> {
+                            log.info("Remove old object: " + entrySet.getKey());
+                            cacheObjects.remove(entrySet.getKey());
+                        }
+                );
     }
 }
 

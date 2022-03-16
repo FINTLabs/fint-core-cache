@@ -29,5 +29,9 @@ public interface Cache<T extends Serializable> {
     Stream<T> streamByHashCode(int hashCode);
 
     Optional<T> getLastUpdatedByFilter(int hashCode, Predicate<T> predicate);
+
+    void evictOldCacheObjects();
+
+    void setRetentionPeriodInMs(long periodInMs);
 }
 
