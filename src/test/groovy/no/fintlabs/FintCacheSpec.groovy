@@ -147,8 +147,6 @@ class FintCacheSpec extends Specification {
         cache.put("key1", new TestObject("Samvis Gamgod"), new int[]{})
         cache.put("key2", new TestObject("Gandalv"), new int[]{})
         def lastUpdate = cache.getLastUpdated()
-        // todo can fail if we dont wait 1ms. Fix?
-        sleep(1)
         cache.put("key3", new TestObject("Tom Bombadil"), new int[]{})
         cache.put("key4", new TestObject("Arwen"), new int[]{})
         cache.put("key5", new TestObject("Gollum"), new int[]{})
