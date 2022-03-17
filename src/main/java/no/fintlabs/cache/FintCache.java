@@ -8,6 +8,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.cache.cacheObjects.CacheObject;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Repository;
 
 import java.io.Serializable;
 import java.util.*;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
+@Repository
 public class FintCache<T extends Serializable> implements Cache<T>, Serializable {
     @Getter
     private Map<String, CacheObject<T>> cacheObjects;
