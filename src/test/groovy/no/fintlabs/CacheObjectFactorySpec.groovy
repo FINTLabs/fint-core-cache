@@ -1,7 +1,11 @@
 package no.fintlabs
 
 import no.fintlabs.cache.CacheObjectFactory
+import no.fintlabs.cache.cacheObjects.PojoCacheObject
+import no.fintlabs.cache.cacheObjects.SerializedCacheObject
+import no.fintlabs.cache.packing.CompressingPacker
 import no.fintlabs.cache.packing.PackingTypes
+import no.fintlabs.cache.packing.SerializationPacker
 import spock.lang.Specification
 
 class CacheObjectFactorySpec extends Specification {
@@ -15,6 +19,8 @@ class CacheObjectFactorySpec extends Specification {
         def cacheObject = cacheObjectFactory.createCacheObject(frodo, new int[]{})
 
         then:
+        cacheObject instanceof SerializedCacheObject
+        cacheObject.packer instanceof CompressingPacker
         frodo == cacheObject.unboxObject()
     }
 
@@ -27,6 +33,8 @@ class CacheObjectFactorySpec extends Specification {
         def cacheObject = cacheObjectFactory.createCacheObject(frodo, new int[]{})
 
         then:
+        cacheObject instanceof SerializedCacheObject
+        cacheObject.packer instanceof SerializationPacker
         frodo == cacheObject.unboxObject()
     }
 
@@ -39,6 +47,7 @@ class CacheObjectFactorySpec extends Specification {
         def cacheObject = cacheObjectFactory.createCacheObject(frodo, new int[]{})
 
         then:
+        cacheObject instanceof PojoCacheObject
         frodo == cacheObject.unboxObject()
     }
 }

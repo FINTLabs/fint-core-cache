@@ -19,13 +19,17 @@ public class CacheObjectFactory<T extends Serializable> {
 
     public CacheObjectFactory(PackingTypes packingType) {
         this.packingType = packingType;
-        this.packer = packer;
 
         switch (packingType) {
-            case DEFLATE:
-                packer = new CompressingPacker(DeflaterOutputStream::new, InflaterInputStream::new);
             case SERIALIZATION:
                 packer = new SerializationPacker();
+                break;
+            case DEFLATE:
+                packer = new CompressingPacker(DeflaterOutputStream::new, InflaterInputStream::new);
+                break;
+            default:
+                packer = null;
+                break;
         }
     }
 
@@ -38,6 +42,5 @@ public class CacheObjectFactory<T extends Serializable> {
             default:
                 throw new UnsupportedOperationException("Can't create cacheObject for type " + packingType);
         }
-
     }
 }
