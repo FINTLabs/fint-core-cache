@@ -2,9 +2,10 @@ package no.fintlabs.cache;
 
 import no.fintlabs.cache.packing.PackingTypes;
 
-@SuppressWarnings(value = "uncheched")
+import java.io.Serializable;
+
 public class CacheManager {
-    public FintCache create(PackingTypes packingTypes) {
-        return new FintCache(new CacheObjectFactory(packingTypes));
+    public <T extends Serializable> FintCache<T> create(PackingTypes packingTypes) {
+        return new FintCache<T>(new CacheObjectFactory(packingTypes));
     }
 }
