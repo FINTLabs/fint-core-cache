@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
-@Repository
 public class FintCache<T extends Serializable> implements Cache<T>, Serializable {
     @Getter
     private Map<String, CacheObject<T>> cacheObjects;
