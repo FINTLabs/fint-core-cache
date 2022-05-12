@@ -35,5 +35,7 @@ public interface Cache<T extends Serializable> {
     void evictOldCacheObjects();
 
     void setRetentionPeriodInMs(long periodInMs);
+
+    String getUrn();
 }
 

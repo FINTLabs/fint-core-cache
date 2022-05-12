@@ -14,7 +14,7 @@ class FintCacheSpec extends Specification {
 
     void setup() {
         def factory = new CacheObjectFactory(PackingTypes.DEFLATE)
-        cache = new FintCache<TestObject>(factory)
+        cache = new FintCache<TestObject>(factory, "urn:test:cache-test")
     }
 
     def "Construct new cache"() {

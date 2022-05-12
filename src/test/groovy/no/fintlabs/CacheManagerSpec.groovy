@@ -7,10 +7,10 @@ import spock.lang.Specification
 class CacheManagerSpec extends Specification {
     def "Create with different packing types"(PackingTypes packingType) {
         given:
-        def fintCacheConfig = new CacheManager()
+        def cacheManager = new CacheManager()
 
         when:
-        def cache = fintCacheConfig.create(packingType)
+        def cache = cacheManager.create(packingType, "test.no", "model-type")
 
         then:
         cache.cacheObjectFactory.packingType == packingType

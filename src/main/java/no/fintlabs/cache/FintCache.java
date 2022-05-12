@@ -8,7 +8,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.cache.cacheObjects.CacheObject;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Repository;
 
 import java.io.Serializable;
 import java.util.*;
@@ -25,15 +24,17 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
     private ListMultimap<Long, String> lastUpdatedIndex;
     private long lastUpdated;
     private final ReentrantLock lock;
-
     private final CacheObjectFactory<T> cacheObjectFactory;
+    @Getter
+    private final String urn;
 
     @Setter
     private long retentionPeriodInMs;
 
-    public FintCache(CacheObjectFactory<T> cacheObjectFactory) {
+    public FintCache(CacheObjectFactory<T> cacheObjectFactory, String urn) {
         this.cacheObjectFactory = cacheObjectFactory;
         lock = new ReentrantLock();
+        this.urn = urn;
         init();
     }
 
