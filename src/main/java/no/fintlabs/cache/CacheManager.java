@@ -10,15 +10,15 @@ import java.util.stream.Stream;
 @Service
 public class CacheManager {
 
-    private final List<FintCache> caches = new ArrayList<>();
+    private final List<Cache> caches = new ArrayList<>();
 
-    public <T extends Serializable> FintCache<T> create(PackingTypes packingTypes, String orgId, String model) {
-        FintCache<T> newCache = new FintCache<T>(new CacheObjectFactory(packingTypes), CacheUri.create(orgId, model));
+    public <T extends Serializable> Cache<T> create(PackingTypes packingTypes, String orgId, String model) {
+        Cache<T> newCache = new FintCache<T>(new CacheObjectFactory(packingTypes), CacheUri.create(orgId, model));
         caches.add(newCache);
         return newCache;
     }
 
-    public Stream<FintCache> getCaches() {
+    public Stream<Cache> getCaches() {
         return caches.stream();
     }
 
@@ -26,7 +26,7 @@ public class CacheManager {
         caches.clear();
     }
 
-    public void remove(FintCache cacheToRemove) {
+    public void remove(Cache cacheToRemove) {
         caches.remove(cacheToRemove);
     }
 }
