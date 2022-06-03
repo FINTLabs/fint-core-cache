@@ -12,7 +12,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -24,7 +23,6 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
     private ListMultimap<Integer, String> hashCodesIndex;
     private ListMultimap<Long, String> lastUpdatedIndex;
     private long lastUpdated;
-    private final ReentrantLock lock;
     private final CacheObjectFactory<T> cacheObjectFactory;
     @Getter
     private final String urn;
@@ -34,7 +32,6 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
 
     public FintCache(CacheObjectFactory<T> cacheObjectFactory, String urn) {
         this.cacheObjectFactory = cacheObjectFactory;
-        lock = new ReentrantLock();
         this.urn = urn;
         init();
     }
@@ -65,9 +62,6 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
             Arrays.stream(hashCodes).forEach(hashCode -> hashCodesIndex.put(hashCode, key));
             lastUpdatedIndex.put(newCacheObject.getLastUpdated(), key);
 
-            while (lock.isLocked()) {
-                log.debug("Lock is on");
-            }
             lastUpdated = System.currentTimeMillis();
         }
     }
@@ -137,14 +131,14 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
 
     @Override
     public long getLastUpdated() {
-        lock.lock();
-        long currentLastUpdated = lastUpdated;
-        sleep();
-        lock.unlock();
-        return currentLastUpdated;
+        synchronized (cacheObjects) {
+            long currentLastUpdated = lastUpdated;
+            sleepOneMsToPreventUpdatesInSameMs();
+            return currentLastUpdated;
+        }
     }
 
-    private void sleep() {
+    private void sleepOneMsToPreventUpdatesInSameMs() {
         try {
             Thread.sleep(1);
         } catch (InterruptedException e) {
