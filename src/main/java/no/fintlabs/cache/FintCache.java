@@ -1,5 +1,6 @@
 package no.fintlabs.cache;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multimaps;
@@ -52,20 +53,23 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
 
     @Override
     public void put(String key, T object, int[] hashCodes) {
-        CacheObject<T> newCacheObject = cacheObjectFactory.createCacheObject(object, hashCodes);
-        if (hasEqualElement(key, newCacheObject)) {
-            cacheObjects.get(key).refreshLastDelivered();
-            return;
-        }
+        synchronized (cacheObjects) {
 
-        cacheObjects.put(key, newCacheObject);
-        Arrays.stream(hashCodes).forEach(hashCode -> hashCodesIndex.put(hashCode, key));
-        lastUpdatedIndex.put(newCacheObject.getLastUpdated(), key);
+            CacheObject<T> newCacheObject = cacheObjectFactory.createCacheObject(object, hashCodes);
+            if (hasEqualElement(key, newCacheObject)) {
+                cacheObjects.get(key).refreshLastDelivered();
+                return;
+            }
 
-        while (lock.isLocked()) {
-            log.debug("Lock is on");
+            cacheObjects.put(key, newCacheObject);
+            Arrays.stream(hashCodes).forEach(hashCode -> hashCodesIndex.put(hashCode, key));
+            lastUpdatedIndex.put(newCacheObject.getLastUpdated(), key);
+
+            while (lock.isLocked()) {
+                log.debug("Lock is on");
+            }
+            lastUpdated = System.currentTimeMillis();
         }
-        lastUpdated = System.currentTimeMillis();
     }
 
     private boolean hasEqualElement(String key, CacheObject<T> object) {
@@ -74,15 +78,21 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
     }
 
     private Stream<CacheObject<T>> getCacheObjectStream() {
-        return cacheObjects.values().stream();
+        synchronized (cacheObjects) {
+            return ImmutableList.copyOf(cacheObjects.values()).stream();
+        }
     }
 
     private Stream<CacheObject<T>> getCacheObjectStream(long sinceTimeStamp) {
-        return Multimaps
-                .filterKeys(lastUpdatedIndex, key -> key > sinceTimeStamp)
-                .values()
-                .stream()
-                .map(s -> cacheObjects.get(s));
+        synchronized (cacheObjects) {
+            Collection<String> collection = Multimaps
+                    .filterKeys(lastUpdatedIndex, key -> key > sinceTimeStamp)
+                    .values();
+
+            return ImmutableList.copyOf(collection)
+                    .stream()
+                    .map(s -> cacheObjects.get(s));
+        }
     }
 
     @Override
