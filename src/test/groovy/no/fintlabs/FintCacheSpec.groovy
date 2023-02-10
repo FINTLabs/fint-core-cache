@@ -5,7 +5,6 @@ import no.fintlabs.cache.FintCache
 import no.fintlabs.cache.packing.PackingTypes
 import spock.lang.Specification
 
-import java.util.function.Predicate
 import java.util.stream.Collectors
 
 class FintCacheSpec extends Specification {
@@ -236,5 +235,33 @@ class FintCacheSpec extends Specification {
 
         then:
         cache.size() == 1
+    }
+
+    def "Remove element from cache"() {
+        given:
+        cache.put("key1", new TestObject("Samvis Gamgod"), new int[]{})
+        cache.put("key2", new TestObject("Gandalv"), new int[]{})
+        cache.put("key3", new TestObject("Tom Bombadil"), new int[]{})
+
+        when:
+        cache.remove("key2")
+
+        then:
+        cache.size() == 2
+    }
+
+    def "Remove all elements from cache"() {
+        given:
+        cache.put("key1", new TestObject("Samvis Gamgod"), new int[]{})
+        cache.put("key2", new TestObject("Gandalv"), new int[]{})
+        cache.put("key3", new TestObject("Tom Bombadil"), new int[]{})
+
+        when:
+        cache.remove("key1")
+        cache.remove("key2")
+        cache.remove("key3")
+
+        then:
+        cache.size() == 0
     }
 }

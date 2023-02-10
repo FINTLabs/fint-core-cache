@@ -66,6 +66,15 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
         }
     }
 
+    @Override
+    public void remove(String key) {
+        CacheObject<T> cacheObject = cacheObjects.remove(key);
+        if (cacheObject != null) {
+            hashCodesIndex.entries().removeIf(entry -> entry.getValue().equals(key));
+            lastUpdatedIndex.entries().removeIf(entry -> entry.getValue().equals(key));
+        }
+    }
+
     private boolean hasEqualElement(String key, CacheObject<T> object) {
         if (!cacheObjects.containsKey(key)) return false;
         return cacheObjects.get(key).equals(object);
