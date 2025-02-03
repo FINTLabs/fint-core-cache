@@ -8,6 +8,8 @@ import java.util.stream.Stream;
 public interface Cache<T extends Serializable> {
     void put(String key, T object, int[] hashCodes);
 
+    void put(String key, T object, int[] hashCodes, long lastDeliveredTimeInMs);
+
     void remove(String key);
 
     void flush();
