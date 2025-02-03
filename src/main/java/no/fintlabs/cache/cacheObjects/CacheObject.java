@@ -10,6 +10,7 @@ public abstract class CacheObject<T extends Serializable> implements Serializabl
 
     private final long lastUpdated;
 
+    @Setter
     private long lastDelivered;
 
     private final int[] hashCodes;
@@ -29,4 +30,5 @@ public abstract class CacheObject<T extends Serializable> implements Serializabl
     public void refreshLastDelivered() {
         lastDelivered = System.currentTimeMillis();
     }
+
 }
