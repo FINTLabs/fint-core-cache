@@ -57,6 +57,8 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
         synchronized (cacheObjects) {
 
             CacheObject<T> newCacheObject = cacheObjectFactory.createCacheObject(object, hashCodes);
+            newCacheObject.setLastDelivered(lastDeliveredTimeInMs);
+
             if (hasEqualElement(key, newCacheObject)) {
                 cacheObjects.get(key).setLastDelivered(lastDeliveredTimeInMs);
                 return;
