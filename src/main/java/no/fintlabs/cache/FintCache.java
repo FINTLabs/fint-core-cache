@@ -50,11 +50,17 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
 
     @Override
     public void put(String key, T object, int[] hashCodes) {
+        put(key, object, hashCodes, System.currentTimeMillis());
+    }
+
+    public void put(String key, T object, int[] hashCodes, long lastDeliveredTimeInMs) {
         synchronized (cacheObjects) {
 
             CacheObject<T> newCacheObject = cacheObjectFactory.createCacheObject(object, hashCodes);
+            newCacheObject.setLastDelivered(lastDeliveredTimeInMs);
+
             if (hasEqualElement(key, newCacheObject)) {
-                cacheObjects.get(key).refreshLastDelivered();
+                cacheObjects.get(key).setLastDelivered(lastDeliveredTimeInMs);
                 return;
             }
 
