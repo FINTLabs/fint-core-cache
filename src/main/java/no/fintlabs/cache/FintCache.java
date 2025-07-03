@@ -93,15 +93,16 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
     }
 
     private Stream<CacheObject<T>> getCacheObjectStream(long sinceTimeStamp) {
+        final List<CacheObject<T>> snapshot;
         synchronized (cacheObjects) {
-            Collection<String> collection = Multimaps
-                    .filterKeys(lastUpdatedIndex, key -> key > sinceTimeStamp)
-                    .values();
-
-            return ImmutableList.copyOf(collection)
-                    .stream()
-                    .map(s -> cacheObjects.get(s));
+            snapshot = lastUpdatedIndex.keySet().stream()
+                    .filter(ts -> ts > sinceTimeStamp)
+                    .flatMap(ts -> lastUpdatedIndex.get(ts).stream())
+                    .map(cacheObjects::get)
+                    .filter(Objects::nonNull)
+                    .toList();
         }
+        return snapshot.stream();
     }
 
     @Override
