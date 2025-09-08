@@ -3,7 +3,7 @@ package no.fintlabs.cache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
-import com.google.common.collect.Multimaps;
+import jakarta.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -79,6 +79,15 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
             hashCodesIndex.entries().removeIf(entry -> entry.getValue().equals(key));
             lastUpdatedIndex.entries().removeIf(entry -> entry.getValue().equals(key));
         }
+    }
+
+    @Nullable
+    public T get(String key) {
+        CacheObject<T> cacheObject = cacheObjects.get(key);
+        if (cacheObject != null) {
+            return cacheObject.unboxObject();
+        }
+        return null;
     }
 
     private boolean hasEqualElement(String key, CacheObject<T> object) {
