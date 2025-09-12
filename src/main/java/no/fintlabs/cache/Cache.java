@@ -14,6 +14,8 @@ public interface Cache<T extends Serializable> {
 
     T get(String key);
 
+    long getLastDelivered(String key);
+
     void flush();
 
     long getLastUpdated();

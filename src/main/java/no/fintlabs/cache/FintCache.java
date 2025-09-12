@@ -72,6 +72,14 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
         }
     }
 
+    public long getLastDelivered(String key) {
+        CacheObject<T> cacheObject = cacheObjects.get(key);
+        if (cacheObject != null) {
+            return cacheObject.getLastDelivered();
+        }
+        return -1L;
+    }
+
     @Override
     public void remove(String key) {
         CacheObject<T> cacheObject = cacheObjects.remove(key);
