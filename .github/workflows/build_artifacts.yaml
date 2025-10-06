@@ -32,24 +32,4 @@ jobs:
           gradle-version: wrapper
 
       - name: Gradle build
-        run: |
-          ./gradlew build
-          mkdir data
-          cp ./build/libs/${GITHUB_REPOSITORY#*/}-*.jar ./data/app.jar
-
-
-      - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{steps.get_repo.outputs.REPO}}
-          path: ./data/app.jar
-
-## Uncomment to trigger a build and publish image to ACR
-#      - name: Start publish workflow
-#        if: github.ref == 'refs/heads/main'
-#        uses: peter-evans/repository-dispatch@v1
-#        with:
-#          token: ${{ secrets.GITHUBACTION_TOKEN }}
-#          repository: ${{ github.repository }}
-#          event-type: trigger-to-publish
-
+        run: ./gradlew build
