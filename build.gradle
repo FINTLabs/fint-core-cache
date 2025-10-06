@@ -22,19 +22,8 @@ configurations {
     }
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
-    repositories {
-        mavenLocal()
-    }
-}
 
 repositories {
-    mavenLocal()
     repositories {
         maven {
             url "https://repo.fintlabs.no/releases"
