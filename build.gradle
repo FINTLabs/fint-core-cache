@@ -9,7 +9,12 @@ plugins {
 }
 
 group = 'no.fintlabs'
-sourceCompatibility = '17'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    withSourcesJar()
+    withJavadocJar()
+}
 
 configurations {
     compileOnly {
@@ -17,19 +22,8 @@ configurations {
     }
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
-    repositories {
-        mavenLocal()
-    }
-}
 
 repositories {
-    mavenLocal()
     repositories {
         maven {
             url "https://repo.fintlabs.no/releases"
@@ -60,11 +54,6 @@ dependencies {
     testImplementation 'cglib:cglib-nodep:3.3.0'
     testImplementation 'org.spockframework:spock-spring:2.4-M1-groovy-4.0'
     testImplementation 'org.spockframework:spock-core:2.4-M1-groovy-4.0'
-}
-
-java {
-    withSourcesJar()
-    withJavadocJar()
 }
 
 test {
