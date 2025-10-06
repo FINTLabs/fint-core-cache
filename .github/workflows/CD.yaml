@@ -21,6 +21,11 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - name: Set version
+        run: |
+          echo "RELEASE_VERSION=$(echo ${GITHUB_REF#refs/*/} | sed "s/^v//")" >> $GITHUB_ENV
+          echo "refs: ${{ github.ref }}"
+
       - name: Gradle Build and publish to Reposilite
         uses: gradle/gradle-build-action@v3
         with:
