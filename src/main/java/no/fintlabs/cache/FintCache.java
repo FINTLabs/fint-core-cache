@@ -194,7 +194,6 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
         return cacheObjects.values().stream().mapToLong(CacheObject::getSize).sum();
     }
 
-    @Scheduled(initialDelay = 900000L, fixedDelay = 900000L)
     public void evictOldCacheObjects() {
         if (retentionPeriodInMs <= 0) return;
         getExpiredEntries().forEach(entrySet -> remove(entrySet.getKey()));
