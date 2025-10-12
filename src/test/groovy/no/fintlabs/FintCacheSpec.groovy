@@ -237,6 +237,27 @@ class FintCacheSpec extends Specification {
         cache.size() == 1
     }
 
+    def "Eviction removes key from internal indexes"() {
+        given:
+        cache.setRetentionPeriodInMs(5)
+        int[] hashes = [123, 456] as int[]
+
+        cache.put("victim", new TestObject("Boromir"), hashes)
+
+        assert cache.@hashCodesIndex.get(123).contains("victim")
+        assert cache.@hashCodesIndex.get(456).contains("victim")
+        assert cache.@lastUpdatedIndex.entries().any { it.value == "victim" }
+
+        when:
+        sleep(10)
+        cache.evictOldCacheObjects()
+
+        then:
+        cache.size() == 0
+        !cache.@hashCodesIndex.entries().any { it.value == "victim" }
+        !cache.@lastUpdatedIndex.entries().any { it.value == "victim" }
+    }
+
     def "Remove element from cache"() {
         given:
         cache.put("key1", new TestObject("Samvis Gamgod"), new int[]{})
