@@ -197,9 +197,7 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
     @Scheduled(initialDelay = 900000L, fixedDelay = 900000L)
     public void evictOldCacheObjects() {
         if (retentionPeriodInMs <= 0) return;
-        getExpiredEntries().forEach(entrySet ->
-                cacheObjects.remove(entrySet.getKey())
-        );
+        getExpiredEntries().forEach(entrySet -> remove(entrySet.getKey()));
     }
 
     private List<Map.Entry<String, CacheObject<T>>> getExpiredEntries() {
