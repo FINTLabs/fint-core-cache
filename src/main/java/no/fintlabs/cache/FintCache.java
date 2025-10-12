@@ -196,23 +196,24 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
 
     @Scheduled(initialDelay = 900000L, fixedDelay = 900000L)
     public void evictOldCacheObjects() {
-        log.debug("Running janitor service");
         if (retentionPeriodInMs <= 0) return;
-        long currentTime = System.currentTimeMillis();
+        getExpiredEntries().forEach(entrySet ->
+                cacheObjects.remove(entrySet.getKey())
+        );
+    }
 
-        List<Map.Entry<String, CacheObject<T>>> itemsToRemove = cacheObjects
+    private List<Map.Entry<String, CacheObject<T>>> getExpiredEntries() {
+        final long currentTimeMillis = System.currentTimeMillis();
+
+        return cacheObjects
                 .entrySet()
                 .stream()
-                .filter(entrySet -> currentTime - entrySet.getValue().getLastDelivered() > retentionPeriodInMs)
+                .filter(entrySet -> expiredCacheObject(currentTimeMillis, entrySet.getValue()))
                 .collect(Collectors.toList());
+    }
 
-        itemsToRemove
-                .stream()
-                .forEach(entrySet -> {
-                            log.info("Remove old object: " + entrySet.getKey());
-                            cacheObjects.remove(entrySet.getKey());
-                        }
-                );
+    private boolean expiredCacheObject(long currentTimeInMillis, CacheObject<T> cacheObject) {
+        return currentTimeInMillis - cacheObject.getLastDelivered() > retentionPeriodInMs;
     }
 }
 
