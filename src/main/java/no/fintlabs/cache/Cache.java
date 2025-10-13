@@ -1,7 +1,10 @@
 package no.fintlabs.cache;
 
+import no.fintlabs.cache.cacheObjects.CacheObject;
+
 import java.io.Serializable;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -39,6 +42,8 @@ public interface Cache<T extends Serializable> {
     Optional<T> getLastUpdatedByFilter(int hashCode, Predicate<T> predicate);
 
     void evictOldCacheObjects();
+
+    void evictOldCacheObjects(BiConsumer<String, CacheObject<T>> onEvict);
 
     void setRetentionPeriodInMs(long periodInMs);
 

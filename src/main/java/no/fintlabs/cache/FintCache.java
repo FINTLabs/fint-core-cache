@@ -8,10 +8,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.cache.cacheObjects.CacheObject;
-import org.springframework.scheduling.annotation.Scheduled;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -194,25 +194,38 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
         return cacheObjects.values().stream().mapToLong(CacheObject::getSize).sum();
     }
 
-    @Scheduled(initialDelay = 900000L, fixedDelay = 900000L)
     public void evictOldCacheObjects() {
-        log.debug("Running janitor service");
-        if (retentionPeriodInMs <= 0) return;
-        long currentTime = System.currentTimeMillis();
+        evictOldCacheObjects(null);
+    }
 
-        List<Map.Entry<String, CacheObject<T>>> itemsToRemove = cacheObjects
+    public void evictOldCacheObjects(BiConsumer<String, CacheObject<T>> onEvict) {
+        if (retentionPeriodInMs <= 0) return;
+        getExpiredEntries().forEach(entrySet -> evictEntry(onEvict, entrySet));
+    }
+
+    private List<Map.Entry<String, CacheObject<T>>> getExpiredEntries() {
+        final long currentTimeMillis = System.currentTimeMillis();
+
+        return cacheObjects
                 .entrySet()
                 .stream()
-                .filter(entrySet -> currentTime - entrySet.getValue().getLastDelivered() > retentionPeriodInMs)
+                .filter(entrySet -> expiredCacheObject(currentTimeMillis, entrySet.getValue()))
                 .collect(Collectors.toList());
+    }
 
-        itemsToRemove
-                .stream()
-                .forEach(entrySet -> {
-                            log.info("Remove old object: " + entrySet.getKey());
-                            cacheObjects.remove(entrySet.getKey());
-                        }
-                );
+    private boolean expiredCacheObject(long currentTimeInMillis, CacheObject<T> cacheObject) {
+        return currentTimeInMillis - cacheObject.getLastDelivered() > retentionPeriodInMs;
+    }
+
+    private void evictEntry(BiConsumer<String, CacheObject<T>> onEvict, Map.Entry<String, CacheObject<T>> entry) {
+        if (onEvict != null) {
+            try {
+                onEvict.accept(entry.getKey(), entry.getValue());
+            } catch (Exception e) {
+                log.warn("Eviction callback failed for key '{}'", entry.getKey(), e);
+            }
+        }
+        remove(entry.getKey());
     }
 }
 

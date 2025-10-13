@@ -2,9 +2,11 @@ package no.fintlabs
 
 import no.fintlabs.cache.CacheObjectFactory
 import no.fintlabs.cache.FintCache
+import no.fintlabs.cache.cacheObjects.CacheObject
 import no.fintlabs.cache.packing.PackingTypes
 import spock.lang.Specification
 
+import java.util.function.BiConsumer
 import java.util.stream.Collectors
 
 class FintCacheSpec extends Specification {
@@ -236,6 +238,68 @@ class FintCacheSpec extends Specification {
         then:
         cache.size() == 1
     }
+
+    def "Eviction removes key from internal indexes"() {
+        given:
+        cache.setRetentionPeriodInMs(5)
+        int[] hashes = [123, 456] as int[]
+
+        cache.put("victim", new TestObject("Boromir"), hashes)
+
+        assert cache.@hashCodesIndex.get(123).contains("victim")
+        assert cache.@hashCodesIndex.get(456).contains("victim")
+        assert cache.@lastUpdatedIndex.entries().any { it.value == "victim" }
+
+        when:
+        sleep(10)
+        cache.evictOldCacheObjects()
+
+        then:
+        cache.size() == 0
+        !cache.@hashCodesIndex.entries().any { it.value == "victim" }
+        !cache.@lastUpdatedIndex.entries().any { it.value == "victim" }
+    }
+
+    def "Eviction callback is invoked for each expired entry"() {
+        given:
+        cache.setRetentionPeriodInMs(50)
+
+        cache.put("old1", new TestObject("Denethor"), new int[]{})
+        cache.put("old2", new TestObject("Faramir"), new int[]{})
+        sleep(60)
+
+        cache.put("fresh", new TestObject("Eowyn"), new int[]{})
+
+        def evictedKeys = [] as List<String>
+        BiConsumer<String, CacheObject<TestObject>> callback =
+                { String k, CacheObject<TestObject> v -> evictedKeys << k } as BiConsumer<String, CacheObject<TestObject>>
+
+        when:
+        cache.evictOldCacheObjects(callback)
+
+        then:
+        evictedKeys.toSet() == ["old1", "old2"] as Set
+        cache.size() == 1
+        cache.get("fresh") != null
+    }
+
+    def "Eviction callback exceptions are swallowed and removal still happens"() {
+        given:
+        cache.setRetentionPeriodInMs(5)
+        cache.put("victim", new TestObject("Grima Ormtunge"), new int[]{})
+        sleep(10)
+
+        BiConsumer<String, CacheObject<TestObject>> exploding =
+                { String k, CacheObject<TestObject> v -> throw new RuntimeException("boom") } as BiConsumer<String, CacheObject<TestObject>>
+
+        when:
+        cache.evictOldCacheObjects(exploding)
+
+        then:
+        noExceptionThrown()
+        cache.size() == 0
+    }
+
 
     def "Remove element from cache"() {
         given:
