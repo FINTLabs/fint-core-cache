@@ -8,10 +8,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.cache.cacheObjects.CacheObject;
-import org.springframework.scheduling.annotation.Scheduled;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -195,8 +195,12 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
     }
 
     public void evictOldCacheObjects() {
+        evictOldCacheObjects(null);
+    }
+
+    public void evictOldCacheObjects(BiConsumer<String, CacheObject<T>> onEvict) {
         if (retentionPeriodInMs <= 0) return;
-        getExpiredEntries().forEach(entrySet -> remove(entrySet.getKey()));
+        getExpiredEntries().forEach(entrySet -> evictEntry(onEvict, entrySet));
     }
 
     private List<Map.Entry<String, CacheObject<T>>> getExpiredEntries() {
@@ -211,6 +215,17 @@ public class FintCache<T extends Serializable> implements Cache<T>, Serializable
 
     private boolean expiredCacheObject(long currentTimeInMillis, CacheObject<T> cacheObject) {
         return currentTimeInMillis - cacheObject.getLastDelivered() > retentionPeriodInMs;
+    }
+
+    private void evictEntry(BiConsumer<String, CacheObject<T>> onEvict, Map.Entry<String, CacheObject<T>> entry) {
+        if (onEvict != null) {
+            try {
+                onEvict.accept(entry.getKey(), entry.getValue());
+            } catch (Exception e) {
+                log.warn("Eviction callback failed for key '{}'", entry.getKey(), e);
+            }
+        }
+        remove(entry.getKey());
     }
 }
 
