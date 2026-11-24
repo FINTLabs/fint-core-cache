@@ -1,4 +1,4 @@
-FROM gradle:7.2-jdk17 as builder
+FROM gradle:9.9-jdk17 as builder
 USER root
 COPY . .
 RUN gradle --no-daemon build
